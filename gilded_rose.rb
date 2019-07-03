@@ -1,34 +1,42 @@
-class GildedRose
-  def initialize(items)
-    @items = items
-  end
 
-  def update_quality
-    @items.each do |item|
-      if item.quality > 0
-        (delta, max) = quality_delta(item)
-        item.quality = quality_range(item.quality - delta, max) unless delta == 0
+class GildedRose
+  class Product
+    def initialize(item) @item = item end
+
+    def quality_max() 50 end
+
+    def quality_delta
+      if @item.sell_in > 0
+        1
+      else
+        2
       end
-      item.sell_in -= 1
+    end
+
+    def quality_range(val) [0, [quality_max, val].min].max end
+
+    def update_quality
+      if @item.quality > 0
+        delta = quality_delta
+        @item.quality = quality_range(@item.quality - delta) unless delta == 0
+      end
+      @item.sell_in -= 1
     end
   end
 
-  private
+  class AgedBrie < Product
+    def quality_delta() -super() end
+  end
 
-  def quality_range(val, max) [0, [max, val].min].max end
-  def quality_delta(item)
-    default = 1
-    default = 2 if item.sell_in <= 0
-    max = 50
-    [case item.name
-    when 'Aged Brie'
-      -default
-    when 'Sulfuras'
-      max = 80
-      0
-    when 'Backstage passes to a TAFKAL80ETC concert'
-      return [item.quality, max] if item.sell_in <= 0 # reset to 0
-      case item.sell_in
+  class Sulfuras < Product
+    def quality_max() 80 end
+    def quality_delta() 0 end
+  end
+
+  class BackstageTAFKAL80ETC < Product
+    def quality_delta
+      return @item.quality if @item.sell_in <= 0 # reset to 0
+      case @item.sell_in
       when 6..10
         -2
       when 1..5
@@ -36,15 +44,45 @@ class GildedRose
       else
         -1
       end
-    when 'Conjured'
-      2 * default
-    when 'Golden helmet'
-      max = 80
-      -default
-    else
-      default
-    end, max]
+    end
   end
+
+  class Conjured < Product
+    def quality_delta() 2 * super end
+  end
+
+  class GoldenHelmet < AgedBrie
+    def quality_max() 80 end
+  end
+
+  def initialize(items)
+    @items = items.map {|it| product_type(it) }
+  end
+
+  def update_quality
+    @items.each(&:update_quality)
+  end
+
+  private
+
+  def product_type(item)
+    # TODO: use capitalize and const_get
+    typ = case item.name
+    when 'Aged Brie'
+      AgedBrie
+    when 'Sulfuras'
+      Sulfuras
+    when 'Backstage passes to a TAFKAL80ETC concert'
+      BackstageTAFKAL80ETC
+    when 'Conjured'
+      Conjured
+    when 'Golden helmet'
+      GoldenHelmet
+    else
+      Product
+    end.new(item)
+  end
+
 end
 
 class Item

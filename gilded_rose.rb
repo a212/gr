@@ -56,7 +56,7 @@ class GildedRose
   end
 
   def initialize(items)
-    @items = items.map {|it| product_type(it) }
+    @items = items.map {|it| product_wrapper(it) }
   end
 
   def update_quality
@@ -65,9 +65,12 @@ class GildedRose
 
   private
 
-  def product_type(item)
-    type = item.name.split(' ').map(&:capitalize).join
-    type = Object.const_get("#{self.class.to_s}::#{type}") rescue case item.name
+  def product_type_name(name)
+    ([self.class.to_s, "::"] + name.split(/\s+/).map(&:capitalize)).join
+  end
+
+  def product_wrapper(item)
+    type = Object.const_get(product_type_name(item.name)) rescue case item.name
     when 'Backstage passes to a TAFKAL80ETC concert'
       BackstageTAFKAL80ETC
     else

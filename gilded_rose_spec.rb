@@ -98,5 +98,15 @@ describe GildedRose do
         end
       end
     end
+    context 'Golden helmet' do
+      it 'increase .... ' do
+        @items = [[5, 10], [0, 20], [-10, 50], [-1,79], [1, 80]].map do |(si, q)|
+          new_context_item(si, q)
+        end
+        [11, 22, 52, 80, 80].each_with_index do |q, i|
+          expect(items[i].quality).to eq q
+        end
+      end
+    end
   end
 end

@@ -6,8 +6,8 @@ class GildedRose
   def update_quality
     @items.each do |item|
       if item.quality > 0
-        delta = quality_delta(item)
-        item.quality = quality_range(item.quality - delta) unless delta == 0
+        (delta, max) = quality_delta(item)
+        item.quality = quality_range(item.quality - delta, max) unless delta == 0
       end
       item.sell_in -= 1
     end
@@ -15,17 +15,19 @@ class GildedRose
 
   private
 
-  def quality_range(val) [0, [50, val].min].max end
+  def quality_range(val, max) [0, [max, val].min].max end
   def quality_delta(item)
     default = 1
     default = 2 if item.sell_in <= 0
-    case item.name
+    max = 50
+    [case item.name
     when 'Aged Brie'
       -default
     when 'Sulfuras'
+      max = 80
       0
     when 'Backstage passes to a TAFKAL80ETC concert'
-      return item.quality if item.sell_in <= 0 # reset to 0
+      return [item.quality, max] if item.sell_in <= 0 # reset to 0
       case item.sell_in
       when 6..10
         -2
@@ -36,9 +38,12 @@ class GildedRose
       end
     when 'Conjured'
       2 * default
+    when 'Golden helmet'
+      max = 80
+      -default
     else
       default
-    end
+    end, max]
   end
 end
 

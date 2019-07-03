@@ -66,21 +66,14 @@ class GildedRose
   private
 
   def product_type(item)
-    # TODO: use capitalize and const_get
-    typ = case item.name
-    when 'Aged Brie'
-      AgedBrie
-    when 'Sulfuras'
-      Sulfuras
+    type = item.name.split(' ').map(&:capitalize).join
+    type = Object.const_get("#{self.class.to_s}::#{type}") rescue case item.name
     when 'Backstage passes to a TAFKAL80ETC concert'
       BackstageTAFKAL80ETC
-    when 'Conjured'
-      Conjured
-    when 'Golden helmet'
-      GoldenHelmet
     else
       Product
-    end.new(item)
+    end
+    type.new(item)
   end
 
 end
